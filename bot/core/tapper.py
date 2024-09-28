@@ -163,7 +163,7 @@ class Tapper:
             return False
 
 
-    def login(self, session: requests.Session):
+    async def login(self, session):
         try:
             head1 = {
                 'Accept': '*/*',
@@ -185,9 +185,9 @@ class Tapper:
                 "referredBy": str(self.ref_id)
             }
             # print(payload)
-            res = session.post("https://api.bybitcoinsweeper.com/api/auth/login", headers=headers, json=payload)
+            res = await session.post("https://api.bybitcoinsweeper.com/api/auth/login", headers=headers, json=payload)
             res.raise_for_status()
-            user_data = res.json()
+            user_data = await res.json()
             # print(user_data)
             logger.success(f"{self.session_name} | Logged in Successfully!")
             headers['Authorization'] = f"Bearer {user_data['accessToken']}"
@@ -228,13 +228,13 @@ class Tapper:
         else:
             logger.warning(f"{self.session_name} | <yellow>Get user info failed: {res.status_code} | {res.json()}</yellow>")
 
-    def refresh_token(self, session: requests.Session):
+    async def refresh_token(self, session):
         payload = {
             "refreshToken": self.access_token
         }
-        res = session.post("https://api.bybitcoinsweeper.com/api/auth/refresh-token", headers=headers, json=payload)
+        res = await session.post("https://api.bybitcoinsweeper.com/api/auth/refresh-token", headers=headers, json=payload)
         if res.status_code == 201:
-            self.access_token = res.json()['accessToken']
+            self.access_token = await res.json()['accessToken']
         else:
             logger.warning(f"{self.session_name} | <yellow>Refresh token failed: {res.text}</yellow>")
 
@@ -266,7 +266,7 @@ class Tapper:
             try:
                 if time() - jwt_token_create_time >= jwt_live_time:
                     if self.logged:
-                        self.refresh_token(session)
+                        await self.refresh_token(session)
                         jwt_token_create_time = time()
                         jwt_token_create_time = randint(850, 900)
                 if time() - access_token_created_time >= token_live_time:
@@ -274,7 +274,7 @@ class Tapper:
                     headers['Tl-Init-Data'] = tg_web_data
                     http_client.headers['Tl-Init-Data'] = tg_web_data
                     self.auth_token = tg_web_data
-                    self.login(session)
+                    await self.login(session)
                     http_client.headers['Authorization'] = headers['Authorization']
                     access_token_created_time = time()
                     token_live_time = randint(3500, 3600)
