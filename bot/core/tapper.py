@@ -266,7 +266,7 @@ class Tapper:
             try:
                 if time() - jwt_token_create_time >= jwt_live_time:
                     if self.logged:
-                        await self.refresh_token(session)
+                        await self.refresh_token(http_client)
                         jwt_token_create_time = time()
                         jwt_token_create_time = randint(850, 900)
                 if time() - access_token_created_time >= token_live_time:
@@ -274,7 +274,7 @@ class Tapper:
                     headers['Tl-Init-Data'] = tg_web_data
                     http_client.headers['Tl-Init-Data'] = tg_web_data
                     self.auth_token = tg_web_data
-                    await self.login(session)
+                    await self.login(http_client)
                     http_client.headers['Authorization'] = headers['Authorization']
                     access_token_created_time = time()
                     token_live_time = randint(3500, 3600)
