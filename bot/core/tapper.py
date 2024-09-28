@@ -292,6 +292,7 @@ class Tapper:
                         if wl > 90:
                             try:
                                 # print(headers)
+                                headers['Content-Type'] = None
                                 res = session.post("https://api.bybitcoinsweeper.com/api/games/start", json={}, headers=headers, verify=False)
                                 res.raise_for_status()
                                 game_data = res.json()
@@ -329,6 +330,7 @@ class Tapper:
                                 }
                                 res = session.options("https://api.bybitcoinsweeper.com/api/games/lose",
                                                       headers=head1)
+                                headers['Content-Type'] = "application/json"
                                 res = session.post("https://api.bybitcoinsweeper.com/api/games/lose", headers=headers,json=payload, verify=False)
                                 if res.status_code == 201:
                                     logger.info(f"{self.session_name} | <red>Lose game: </red><cyan>{game_id}</cyan> <red>:(</red>")
@@ -361,8 +363,8 @@ class Tapper:
                                 }
                                 res = session.options("https://api.bybitcoinsweeper.com/api/games/start",
                                                       headers=head1)
-                                headers['Content-Type'] = "application/json"
-                                res = session.post("https://api.bybitcoinsweeper.com/api/games/start", json={}, verify=False)
+                                headers['Content-Type'] = None
+                                res = session.post("https://api.bybitcoinsweeper.com/api/games/start", verify=False)
                                 # print(http_client.headers)
                                 res.raise_for_status()
                                 game_data = res.json()
@@ -417,6 +419,7 @@ class Tapper:
                                     'User-Agent': headers["User-Agent"]
                                 }
                                 res = session.options("https://api.bybitcoinsweeper.com/api/games/win", headers=head1)
+                                headers['Content-Type'] = "application/json"
 
                                 res = session.post("https://api.bybitcoinsweeper.com/api/games/win",
                                                    json=payload, verify=False)
