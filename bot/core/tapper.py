@@ -292,7 +292,7 @@ class Tapper:
                         if wl > 90:
                             try:
                                 # print(headers)
-                                res = session.post("https://api.bybitcoinsweeper.com/api/games/start", headers=headers, verify=False)
+                                res = session.post("https://api.bybitcoinsweeper.com/api/games/start", json={}, headers=headers, verify=False)
                                 res.raise_for_status()
                                 game_data = res.json()
                                 game_id = game_data['id']
