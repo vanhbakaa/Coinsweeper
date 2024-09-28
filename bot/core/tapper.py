@@ -422,7 +422,7 @@ class Tapper:
                                                    json=payload, verify=False)
 
                                 # print(res.text)
-                                if res.status == 201:
+                                if res.status_code == 201:
                                     logger.info(
                                         f"{self.session_name} | <green> Won game : </green><cyan>{game_id}</cyan> | Earned <yellow>{int(lr_pl)}</yellow>")
                                     # print(res.headers)
