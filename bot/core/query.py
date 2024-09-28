@@ -243,7 +243,7 @@ class Tapper:
         access_token_created_time = 0
         proxy_conn = ProxyConnector().from_url(proxy) if proxy else None
 
-        headers["User-Agent"] = "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Mobile Safari/537.36"
+        headers["User-Agent"] = generate_random_user_agent(device_type='android', browser_type='chrome')
         http_client = CloudflareScraper(headers=headers, connector=proxy_conn)
         session = requests.Session()
 
