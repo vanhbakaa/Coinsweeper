@@ -178,7 +178,7 @@ class Tapper:
                 'Sec-Fetch-Site': 'same-site',
                 'User-Agent': headers["User-Agent"],
             }
-            res = session.options("https://api.bybitcoinsweeper.com/api/auth/login", headers=head1)
+            res = await session.options("https://api.bybitcoinsweeper.com/api/auth/login", headers=head1)
 
             payload = {
                 "initData": self.auth_token,
