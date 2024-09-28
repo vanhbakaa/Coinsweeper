@@ -286,7 +286,7 @@ class Tapper:
                     while attempt_play > 0:
                         attempt_play -= 1
                         wl = randint(1, 100)
-                        if wl > 100:
+                        if wl > 90:
                             try:
                                 # print(headers)
                                 res = session.post("https://api.bybitcoinsweeper.com/api/games/start", headers=headers)
