@@ -366,7 +366,7 @@ async def run_query_tapper(query: str, name: str, proxy: str | None):
     try:
         sleep_ = randint(1, 15)
         logger.info(f" start after {sleep_}s")
-        # await asyncio.sleep(sleep_)
+        await asyncio.sleep(sleep_)
         await Tapper(query=query, session_name=name).run(proxy=proxy)
     except InvalidSession:
         logger.error(f"Invalid Query: {query}")
