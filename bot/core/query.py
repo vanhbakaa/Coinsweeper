@@ -283,7 +283,7 @@ class Tapper:
                                 bits = game_data['rewards']['bits']
                                 gifts = game_data['rewards']['gifts']
                                 logger.info(f"Successfully started game: <light-blue>{game_id}</light-blue>")
-                                sleep_ = randint(85, 151)
+                                sleep_ = randint(settings.TIME_PLAY_EACH_GAME[0], settings.TIME_PLAY_EACH_GAME[1])
                                 logger.info(f"{self.session_name} | Wait <cyan>{sleep_}s</cyan> to complete game...")
                                 await asyncio.sleep(sleep_)
                                 unix_time_started = datetime.strptime(started_at, '%Y-%m-%dT%H:%M:%S.%fZ')
