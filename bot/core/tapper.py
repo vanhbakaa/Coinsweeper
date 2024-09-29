@@ -233,12 +233,13 @@ class Tapper:
 
     def refresh_token(self, session: requests.Session):
         payload = {
-            "refreshToken": str(headers['Authorization'])
+            "refreshToken": str(self.access_token)
         }
         res = session.post("https://api.bybitcoinsweeper.com/api/auth/refresh-token", headers=headers, json=payload)
         if res.status_code == 201:
             token = res.json()
             headers['Authorization'] = f"Bearer {token['accessToken']}"
+            self.access_token = token['accessToken']
             logger.success(f"{self.session_name} | Refresh token successfully")
 
         else:
