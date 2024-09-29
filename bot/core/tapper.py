@@ -297,7 +297,7 @@ class Tapper:
                             if await self.get_me(session):
                                 break
 
-                    attempt_play = settings.GAME_PLAY_EACH_ROUND
+                    attempt_play = randint(settings.GAME_PLAY_EACH_ROUND[0], settings.GAME_PLAY_EACH_ROUND[1])
                     while attempt_play > 0:
                         attempt_play -= 1
                         wl = randint(1, 100)
