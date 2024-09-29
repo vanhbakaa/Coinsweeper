@@ -59,6 +59,7 @@ class Tapper:
         self.ref_id = None
         self.access_token = None
         self.logged = False
+        self.refresh_token_ = None
 
     async def get_tg_web_data(self, proxy: str | None) -> str:
         try:
@@ -191,7 +192,8 @@ class Tapper:
             # print(user_data)
             logger.success(f"{self.session_name} | Logged in Successfully!")
             headers['Authorization'] = f"Bearer {user_data['accessToken']}"
-            self.access_token = {user_data['accessToken']}
+            self.access_token = user_data['accessToken']
+            self.refresh_token_ = user_data['refreshToken']
             self.logged = True
         except Exception as e:
             traceback.print_exc()
@@ -233,13 +235,15 @@ class Tapper:
 
     def refresh_token(self, session: requests.Session):
         payload = {
-            "refreshToken": str(self.access_token)
+            "refreshToken": str(self.refresh_token_)
         }
+        # print(payload)
         res = session.post("https://api.bybitcoinsweeper.com/api/auth/refresh-token", headers=headers, json=payload)
         if res.status_code == 201:
             token = res.json()
             headers['Authorization'] = f"Bearer {token['accessToken']}"
             self.access_token = token['accessToken']
+            self.refresh_token_ = token['refreshToken']
             logger.success(f"{self.session_name} | Refresh token successfully")
 
         else:
@@ -285,6 +289,7 @@ class Tapper:
                 self.logged = True
                 if self.logged:
                     try:
+                        # self.refresh_token(session)
                         await self.get_me(session)
                     except:
                         while True:
