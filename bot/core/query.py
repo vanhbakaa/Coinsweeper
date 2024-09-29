@@ -57,6 +57,7 @@ class Tapper:
         self.access_token = None
         self.logged = False
         self.ref_id = "6624523270"
+        self.refresh_token_ = None
 
     async def check_proxy(self, http_client: aiohttp.ClientSession, proxy: Proxy):
         try:
@@ -97,7 +98,8 @@ class Tapper:
             # print(user_data)
             logger.success(f"{self.session_name} | Logged in Successfully!")
             headers['Authorization'] = f"Bearer {user_data['accessToken']}"
-            self.access_token = {user_data['accessToken']}
+            self.access_token = user_data['accessToken']
+            self.refresh_token_ = user_data['refreshToken']
             self.logged = True
         except Exception as e:
             traceback.print_exc()
@@ -139,13 +141,14 @@ class Tapper:
 
     def refresh_token(self, session: requests.Session):
         payload = {
-            "refreshToken": str(self.access_token)
+            "refreshToken": str(self.refresh_token_)
         }
         res = session.post("https://api.bybitcoinsweeper.com/api/auth/refresh-token", headers=headers, json=payload)
         if res.status_code == 201:
             token = res.json()
             headers['Authorization'] = f"Bearer {token['accessToken']}"
             self.access_token = token['accessToken']
+            self.refresh_token_ = token['refreshToken']
             logger.success(f"{self.session_name} | Refresh token successfully")
 
         else:
