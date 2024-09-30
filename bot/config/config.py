@@ -9,8 +9,10 @@ class Settings(BaseSettings):
 
 
     REF_LINK: str = "https://t.me/BybitCoinsweeper_Bot?start=referredBy=6624523270"
-    GAME_PLAY_EACH_ROUND: list[int] = [2, 6]
+    GAME_PLAY_EACH_ROUND: list[int] = [2, 4]
     TIME_PLAY_EACH_GAME: list[int] = [130, 180]
+
+    DELAY_EACH_ACCOUNT: list[int] = [20, 30]
 
     USE_PROXY_FROM_FILE: bool = False
 
