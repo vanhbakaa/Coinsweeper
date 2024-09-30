@@ -346,7 +346,7 @@ class Tapper:
                                 res = session.options("https://api.bybitcoinsweeper.com/api/games/lose",
                                                       headers=head1)
                                 res = session.post("https://api.bybitcoinsweeper.com/api/games/lose", headers=headers ,json=payload)
-                                print(res.headers)
+                                # print(res.headers)
                                 if res.status_code == 201:
                                     logger.info(f"{self.session_name} | <red>Lose game: </red><cyan>{game_id}</cyan> <red>:(</red>")
                                     # await asyncio.sleep(random.uniform(0.5, 1.5))
@@ -439,7 +439,7 @@ class Tapper:
                                                    json=payload, headers=headers)
 
                                 # print(res.text)
-                                print(res.headers)
+                                # print(res.headers)
                                 if res.status_code == 201:
                                     logger.info(
                                         f"{self.session_name} | <green> Won game : </green><cyan>{game_id}</cyan> | Earned <yellow>{int(lr_pl)}</yellow>")
