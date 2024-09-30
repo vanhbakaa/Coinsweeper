@@ -308,7 +308,9 @@ class Tapper:
                                 # print(headers)
                                 res = session.post("https://api.bybitcoinsweeper.com/api/games/start", headers=headers, json={})
 
-                                res.raise_for_status()
+                                if res.status_code == 401:
+                                    self.refresh_token(session)
+                                    continue
                                 # print(res.headers)
                                 game_data = res.json()
                                 game_id = game_data['id']
@@ -351,9 +353,11 @@ class Tapper:
                                     logger.info(f"{self.session_name} | <red>Lose game: </red><cyan>{game_id}</cyan> <red>:(</red>")
                                     # await asyncio.sleep(random.uniform(0.5, 1.5))
                                     await self.get_me(session)
+                                elif res.status_code == 401:
+                                    self.refresh_token(session)
+                                    continue
 
                             except Exception as e:
-                                print(res.text)
                                 logger.warning(f"{self.session_name} | Unknown error while trying to play game: {e}")
                         else:
                             try:
@@ -379,8 +383,9 @@ class Tapper:
                                 res1 = session.options("https://api.bybitcoinsweeper.com/api/games/start",
                                                       headers=head1)
                                 res = session.post("https://api.bybitcoinsweeper.com/api/games/start", headers=headers, json={})
-                                # print(http_client.headers)
-                                res.raise_for_status()
+                                if res.status_code == 401:
+                                    self.refresh_token(session)
+                                    continue
                                 game_data = res.json()
                                 # print(res.headers)
                                 # print(game_data)
@@ -445,8 +450,9 @@ class Tapper:
                                         f"{self.session_name} | <green> Won game : </green><cyan>{game_id}</cyan> | Earned <yellow>{int(lr_pl)}</yellow>")
                                     # print(res.headers)
                                     await self.get_me(session)
-                                else:
-                                    print(res.text)
+                                elif res.status_code == 401:
+                                    self.refresh_token(session)
+                                    continue
 
                             except Exception as e:
                                 print(res.text)
