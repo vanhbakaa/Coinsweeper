@@ -2,6 +2,7 @@ import asyncio
 import random
 import sys
 import traceback
+from itertools import cycle
 from time import time
 from urllib.parse import unquote
 
@@ -43,7 +44,7 @@ def calc(i, s, a, o, d, g):
 
 
 class Tapper:
-    def __init__(self, tg_client: Client):
+    def __init__(self, tg_client: Client, multi_thread: bool):
         self.tg_client = tg_client
         self.session_name = tg_client.name
         self.first_name = ''
@@ -60,6 +61,7 @@ class Tapper:
         self.access_token = None
         self.logged = False
         self.refresh_token_ = None
+        self.multi_thread = multi_thread
 
     async def get_tg_web_data(self, proxy: str | None) -> str:
         try:
@@ -305,7 +307,9 @@ class Tapper:
                             try:
                                 # print(headers)
                                 res = session.post("https://api.bybitcoinsweeper.com/api/games/start", headers=headers, json={})
+
                                 res.raise_for_status()
+                                # print(res.headers)
                                 game_data = res.json()
                                 game_id = game_data['id']
                                 bagcoins = game_data['rewards']['bagCoins']
@@ -342,6 +346,7 @@ class Tapper:
                                 res = session.options("https://api.bybitcoinsweeper.com/api/games/lose",
                                                       headers=head1)
                                 res = session.post("https://api.bybitcoinsweeper.com/api/games/lose", headers=headers ,json=payload)
+                                # print(res.headers)
                                 if res.status_code == 201:
                                     logger.info(f"{self.session_name} | <red>Lose game: </red><cyan>{game_id}</cyan> <red>:(</red>")
                                     # await asyncio.sleep(random.uniform(0.5, 1.5))
@@ -377,6 +382,7 @@ class Tapper:
                                 # print(http_client.headers)
                                 res.raise_for_status()
                                 game_data = res.json()
+                                # print(res.headers)
                                 # print(game_data)
                                 started_at = game_data['createdAt']
                                 game_id = game_data['id']
@@ -433,6 +439,7 @@ class Tapper:
                                                    json=payload, headers=headers)
 
                                 # print(res.text)
+                                # print(res.headers)
                                 if res.status_code == 201:
                                     logger.info(
                                         f"{self.session_name} | <green> Won game : </green><cyan>{game_id}</cyan> | Earned <yellow>{int(lr_pl)}</yellow>")
@@ -449,9 +456,15 @@ class Tapper:
 
                         await asyncio.sleep(randint(15, 25))
 
-                sleep_ = randint(500, 1000)
-                logger.info(f"{self.session_name} | Sleep {sleep_}s...")
-                await asyncio.sleep(sleep_)
+                if self.multi_thread:
+
+                    sleep_ = randint(500, 1000)
+                    logger.info(f"{self.session_name} | Sleep {sleep_}s...")
+                    await asyncio.sleep(sleep_)
+                else:
+                    await http_client.close()
+                    session.close()
+                    break
 
             except InvalidSession as error:
                 raise error
@@ -469,3 +482,20 @@ async def run_tapper(tg_client: Client, proxy: str | None):
         await Tapper(tg_client=tg_client).run(proxy=proxy)
     except InvalidSession:
         logger.error(f"{tg_client.name} | Invalid Session")
+
+async def run_tapper1(tg_clients: list[Client], proxies):
+    proxies_cycle = cycle(proxies) if proxies else None
+    while True:
+        for tg_client in tg_clients:
+            try:
+                await Tapper(tg_client=tg_client, multi_thread=False).run(next(proxies_cycle) if proxies_cycle else None)
+            except InvalidSession:
+                logger.error(f"{tg_client.name} | Invalid Session")
+
+            sleep_ = randint(settings.DELAY_EACH_ACCOUNT[0], settings.DELAY_EACH_ACCOUNT[1])
+            logger.info(f"Sleep {sleep_}s...")
+            await asyncio.sleep(sleep_)
+
+        sleep_ = randint(500, 700)
+        logger.info(f"<red>Sleep {sleep_}s...</red>")
+        await asyncio.sleep(sleep_)
