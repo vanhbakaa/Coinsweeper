@@ -28,7 +28,7 @@
 | **API_ID / API_HASH**      | Platform data from which to run the Telegram session (default - android)                                      |       
 | **REF_LINK**               | Put your ref link here (default: my ref link)                                                                 |
 | **AUTO_PLAY**              | Auto play game (default: True)                                                                                  |
-| **GAME_PLAY_EACH_ROUND**              | number of game play in one round (default: 3)                                                                                  |
+| **GAME_PLAY_EACH_ROUND**              | Random number of game play in one round (default: [2, 4])                                                                                  |
 | **TIME_PLAY_EACH_GAME**              |Random time in second to play each game (default: [130, 180])                                                                                  |
 | **USE_PROXY_FROM_FILE**    | Whether to use a proxy from the bot/config/proxies.txt file (True / False)                                    |
 
