@@ -1,10 +1,8 @@
 import asyncio
 import random
-import sys
 import traceback
 from itertools import cycle
 from time import time
-from urllib.parse import unquote
 
 import hmac
 import hashlib
@@ -16,9 +14,6 @@ import pytz
 from aiocfscrape import CloudflareScraper
 from aiohttp_proxy import ProxyConnector
 from better_proxy import Proxy
-from pyrogram.errors import Unauthorized, UserDeactivated, AuthKeyUnregistered, FloodWait
-from pyrogram.raw import functions
-from pyrogram.raw.functions.messages import RequestWebView
 from bot.core.agents import generate_random_user_agent
 from bot.config import settings
 
@@ -124,8 +119,6 @@ class Tapper:
                 'Sec-Fetch-Mode': 'cors',
                 'Sec-Fetch-Site': 'same-site',
                 'Sec-Ch-Ua': '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
-                'Sec-Ch-Ua-mobile': '?1',
-                'Sec-Ch-Ua-platform': '"Android"',
                 'User-Agent': headers["User-Agent"]
             }
             res1 = session.options("https://api.bybitcoinsweeper.com/api/users/me",
@@ -145,6 +138,7 @@ class Tapper:
         payload = {
             "refreshToken": str(self.refresh_token_)
         }
+        # print(payload)
         res = session.post("https://api.bybitcoinsweeper.com/api/auth/refresh-token", headers=headers, json=payload)
         if res.status_code == 201:
             token = res.json()
@@ -161,7 +155,7 @@ class Tapper:
         access_token_created_time = 0
         proxy_conn = ProxyConnector().from_url(proxy) if proxy else None
 
-        headers["User-Agent"] = generate_random_user_agent(device_type='android', browser_type='chrome')
+        headers["User-Agent"] = generate_random_user_agent(device_type='windows', browser_type='chrome')
         http_client = CloudflareScraper(headers=headers, connector=proxy_conn)
         session = requests.Session()
 
@@ -196,6 +190,7 @@ class Tapper:
                 self.logged = True
                 if self.logged:
                     try:
+                        # self.refresh_token(session)
                         await self.get_me(session)
                     except:
                         while True:
@@ -211,9 +206,11 @@ class Tapper:
                             try:
                                 # print(headers)
                                 res = session.post("https://api.bybitcoinsweeper.com/api/games/start", headers=headers, json={})
+
                                 if res.status_code == 401:
                                     self.refresh_token(session)
                                     continue
+                                # print(res.headers)
                                 game_data = res.json()
                                 game_id = game_data['id']
                                 bagcoins = game_data['rewards']['bagCoins']
@@ -243,13 +240,12 @@ class Tapper:
                                     'Sec-Fetch-Mode': 'cors',
                                     'Sec-Fetch-Site': 'same-site',
                                     'Sec-Ch-Ua': '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
-                                    'Sec-Ch-Ua-mobile': '?1',
-                                    'Sec-Ch-Ua-platform': '"Android"',
                                     'User-Agent': headers["User-Agent"],
                                 }
                                 res = session.options("https://api.bybitcoinsweeper.com/api/games/lose",
                                                       headers=head1)
                                 res = session.post("https://api.bybitcoinsweeper.com/api/games/lose", headers=headers ,json=payload)
+                                # print(res.headers)
                                 if res.status_code == 201:
                                     logger.info(f"{self.session_name} | <red>Lose game: </red><cyan>{game_id}</cyan> <red>:(</red>")
                                     # await asyncio.sleep(random.uniform(0.5, 1.5))
@@ -259,7 +255,6 @@ class Tapper:
                                     continue
 
                             except Exception as e:
-                                print(res.text)
                                 logger.warning(f"{self.session_name} | Unknown error while trying to play game: {e}")
                         else:
                             try:
@@ -278,18 +273,16 @@ class Tapper:
                                     'Sec-Fetch-Mode': 'cors',
                                     'Sec-Fetch-Site': 'same-site',
                                     'Sec-Ch-Ua': '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
-                                    'Sec-Ch-Ua-mobile': '?1',
-                                    'Sec-Ch-Ua-platform': '"Android"',
                                     'User-Agent': headers["User-Agent"],
                                 }
                                 res1 = session.options("https://api.bybitcoinsweeper.com/api/games/start",
                                                       headers=head1)
                                 res = session.post("https://api.bybitcoinsweeper.com/api/games/start", headers=headers, json={})
-                                # print(http_client.headers)
                                 if res.status_code == 401:
                                     self.refresh_token(session)
                                     continue
                                 game_data = res.json()
+                                # print(res.headers)
                                 # print(game_data)
                                 started_at = game_data['createdAt']
                                 game_id = game_data['id']
@@ -336,8 +329,6 @@ class Tapper:
                                     'Sec-Fetch-Mode': 'cors',
                                     'Sec-Fetch-Site': 'same-site',
                                     'Sec-Ch-Ua': '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
-                                    'Sec-Ch-Ua-mobile': '?1',
-                                    'Sec-Ch-Ua-platform': '"Android"',
                                     'User-Agent': headers["User-Agent"]
                                 }
                                 res = session.options("https://api.bybitcoinsweeper.com/api/games/win", headers=head1)
@@ -346,6 +337,7 @@ class Tapper:
                                                    json=payload, headers=headers)
 
                                 # print(res.text)
+                                # print(res.headers)
                                 if res.status_code == 201:
                                     logger.info(
                                         f"{self.session_name} | <green> Won game : </green><cyan>{game_id}</cyan> | Earned <yellow>{int(lr_pl)}</yellow>")
