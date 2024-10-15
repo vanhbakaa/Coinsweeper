@@ -218,8 +218,6 @@ class Tapper:
                 'Sec-Fetch-Mode': 'cors',
                 'Sec-Fetch-Site': 'same-site',
                 'Sec-Ch-Ua': '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
-                'Sec-Ch-Ua-mobile': '?1',
-                'Sec-Ch-Ua-platform': '"Android"',
                 'User-Agent': headers["User-Agent"]
             }
             res1 = session.options("https://api.bybitcoinsweeper.com/api/users/me",
@@ -256,7 +254,7 @@ class Tapper:
         access_token_created_time = 0
         proxy_conn = ProxyConnector().from_url(proxy) if proxy else None
 
-        headers["User-Agent"] = generate_random_user_agent(device_type='android', browser_type='chrome')
+        headers["User-Agent"] = generate_random_user_agent(device_type='windows', browser_type='chrome')
         http_client = CloudflareScraper(headers=headers, connector=proxy_conn)
         session = requests.Session()
 
@@ -341,8 +339,6 @@ class Tapper:
                                     'Sec-Fetch-Mode': 'cors',
                                     'Sec-Fetch-Site': 'same-site',
                                     'Sec-Ch-Ua': '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
-                                    'Sec-Ch-Ua-mobile': '?1',
-                                    'Sec-Ch-Ua-platform': '"Android"',
                                     'User-Agent': headers["User-Agent"],
                                 }
                                 res = session.options("https://api.bybitcoinsweeper.com/api/games/lose",
@@ -376,8 +372,6 @@ class Tapper:
                                     'Sec-Fetch-Mode': 'cors',
                                     'Sec-Fetch-Site': 'same-site',
                                     'Sec-Ch-Ua': '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
-                                    'Sec-Ch-Ua-mobile': '?1',
-                                    'Sec-Ch-Ua-platform': '"Android"',
                                     'User-Agent': headers["User-Agent"],
                                 }
                                 res1 = session.options("https://api.bybitcoinsweeper.com/api/games/start",
@@ -434,8 +428,6 @@ class Tapper:
                                     'Sec-Fetch-Mode': 'cors',
                                     'Sec-Fetch-Site': 'same-site',
                                     'Sec-Ch-Ua': '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
-                                    'Sec-Ch-Ua-mobile': '?1',
-                                    'Sec-Ch-Ua-platform': '"Android"',
                                     'User-Agent': headers["User-Agent"]
                                 }
                                 res = session.options("https://api.bybitcoinsweeper.com/api/games/win", headers=head1)
