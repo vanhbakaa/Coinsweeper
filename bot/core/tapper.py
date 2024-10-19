@@ -256,7 +256,7 @@ class Tapper:
 
         headers["User-Agent"] = generate_random_user_agent(device_type='android', browser_type='chrome')
         http_client = CloudflareScraper(headers=headers, connector=proxy_conn)
-        session = requests.Session()
+        session = cloudscraper.create_scraper()
 
         if proxy:
             proxy_check = await self.check_proxy(http_client=http_client, proxy=proxy)
