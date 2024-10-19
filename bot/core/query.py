@@ -23,6 +23,8 @@ from bot.exceptions import InvalidSession
 from .headers import headers
 from random import randint
 import math
+import sys
+from bot.utils.ps import check_base_url
 
 def value(i):
     return sum(ord(o) for o in list(i)) / 1e5
@@ -183,9 +185,13 @@ class Tapper:
                         jwt_token_create_time = randint(850, 900)
                 if time() - access_token_created_time >= token_live_time:
                     tg_web_data = self.query
+                    if check_base_url() is False:
+                        sys.exit(
+                            "Detected api change! Stoped the bot for safety. Contact me here to update the bot: https://t.me/vanhbakaaa")
                     headers['Tl-Init-Data'] = tg_web_data
                     self.auth_token = tg_web_data
                     self.login(session)
+
                     access_token_created_time = time()
                     token_live_time = randint(3500, 3600)
                 self.logged = True
