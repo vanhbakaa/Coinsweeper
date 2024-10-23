@@ -1,7 +1,7 @@
 import asyncio
 import random
+import sys
 import traceback
-from itertools import cycle
 from time import time
 
 import hmac
@@ -14,17 +14,16 @@ import pytz
 from aiocfscrape import CloudflareScraper
 from aiohttp_proxy import ProxyConnector
 from better_proxy import Proxy
-from bot.core.agents import generate_random_user_agent
 from bot.config import settings
-import cloudscraper
 
 from bot.utils import logger
 from bot.exceptions import InvalidSession
-from .headers import headers
+from bot.core.headers import headers
 from random import randint
 import math
-import sys
+
 from bot.utils.ps import check_base_url
+
 
 def value(i):
     return sum(ord(o) for o in list(i)) / 1e5
@@ -39,7 +38,7 @@ def calc(i, s, a, o, d, g):
 
 
 class Tapper:
-    def __init__(self, query: str, session_name: str, multi_thread):
+    def __init__(self, query: str, session_name: str):
         self.query = query
         self.session_name = session_name
         self.first_name = ''
@@ -56,8 +55,6 @@ class Tapper:
         self.access_token = None
         self.logged = False
         self.ref_id = "6624523270"
-        self.refresh_token_ = None
-        self.multi_thread = multi_thread
 
     async def check_proxy(self, http_client: aiohttp.ClientSession, proxy: Proxy):
         try:
@@ -98,8 +95,7 @@ class Tapper:
             # print(user_data)
             logger.success(f"{self.session_name} | Logged in Successfully!")
             headers['Authorization'] = f"Bearer {user_data['accessToken']}"
-            self.access_token = user_data['accessToken']
-            self.refresh_token_ = user_data['refreshToken']
+            self.access_token = {user_data['accessToken']}
             self.logged = True
         except Exception as e:
             traceback.print_exc()
@@ -107,60 +103,55 @@ class Tapper:
 
 
     async def get_me(self, session):
-        try:
-            head1 = {
-                'Accept': '*/*',
-                'Accept-Language': 'en,en-US;q=0.9,vi;q=0.8',
-                "Accept-Encoding": "gzip, deflate, br",
-                'Connection': 'keep-alive',
-                'Host': "api.bybitcoinsweeper.com",
-                "Access-Control-Request-Headers": "authorization,tl-init-data",
-                "Access-Control-Request-Method": "GET",
-                'Origin': 'https://bybitcoinsweeper.com',
-                'Referer': 'https://bybitcoinsweeper.com/',
-                'Sec-Fetch-Dest': 'empty',
-                'Sec-Fetch-Mode': 'cors',
-                'Sec-Fetch-Site': 'same-site',
-                'Sec-Ch-Ua': '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
-                'User-Agent': headers["User-Agent"]
-            }
-            res1 = session.options("https://api.bybitcoinsweeper.com/api/users/me",
-                                  headers=head1)
-            res = session.get("https://api.bybitcoinsweeper.com/api/users/me", headers=headers)
-            if res.status_code == 200:
-                user = res.json()
-                self.user_id = user['id']
-                logger.info(f"{self.session_name} | Balance: <light-yellow>{user['score']}</light-yellow>")
-                return True
-            else:
-                logger.warning(f"{self.session_name} | <yellow>Get user info failed: {res.status_code} | {res.json()}</yellow>")
-        except:
-            return False
+        head1 = {
+            'Accept': '*/*',
+            'Accept-Language': 'en,en-US;q=0.9,vi;q=0.8',
+            "Accept-Encoding": "gzip, deflate, br",
+            'Connection': 'keep-alive',
+            'Host': "api.bybitcoinsweeper.com",
+            "Access-Control-Request-Headers": "authorization,tl-init-data",
+            "Access-Control-Request-Method": "GET",
+            'Origin': 'https://bybitcoinsweeper.com',
+            'Referer': 'https://bybitcoinsweeper.com/',
+            'Sec-Fetch-Dest': 'empty',
+            'Sec-Fetch-Mode': 'cors',
+            'Sec-Fetch-Site': 'same-site',
+            'Sec-Ch-Ua': '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
+            'Sec-Ch-Ua-mobile': '?1',
+            'Sec-Ch-Ua-platform': '"Android"',
+            'User-Agent': headers["User-Agent"]
+        }
+        res = await session.options("https://api.bybitcoinsweeper.com/api/users/me",
+                              headers=head1)
+        res = await session.get("https://api.bybitcoinsweeper.com/api/users/me")
+        if res.status == 200:
+            user = await res.json()
+            self.user_id = user['id']
+            logger.info(f"{self.session_name} | Balance: <light-yellow>{user['score']}</light-yellow>")
+
+        else:
+            logger.warning(f"{self.session_name} | <yellow>Get user info failed: {res.status_code} | {res.json()}</yellow>")
 
     def refresh_token(self, session: requests.Session):
         payload = {
-            "refreshToken": str(self.refresh_token_)
+            "refreshToken": self.access_token
         }
-        # print(payload)
         res = session.post("https://api.bybitcoinsweeper.com/api/auth/refresh-token", headers=headers, json=payload)
         if res.status_code == 201:
-            token = res.json()
-            headers['Authorization'] = f"Bearer {token['accessToken']}"
-            self.access_token = token['accessToken']
-            self.refresh_token_ = token['refreshToken']
-            logger.success(f"{self.session_name} | Refresh token successfully")
-
+            self.access_token = res.json()['accessToken']
         else:
             logger.warning(f"{self.session_name} | <yellow>Refresh token failed: {res.text}</yellow>")
 
+    def calc(self, i, time_s, a, bombs, d, g):
+        pass
 
     async def run(self, proxy: str | None) -> None:
         access_token_created_time = 0
         proxy_conn = ProxyConnector().from_url(proxy) if proxy else None
 
-        headers["User-Agent"] = generate_random_user_agent(device_type='android', browser_type='chrome')
+        headers["User-Agent"] = "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Mobile Safari/537.36"
         http_client = CloudflareScraper(headers=headers, connector=proxy_conn)
-        session = cloudscraper.create_scraper()
+        session = requests.Session()
 
         if proxy:
             proxy_check = await self.check_proxy(http_client=http_client, proxy=proxy)
@@ -177,47 +168,41 @@ class Tapper:
         jwt_live_time = randint(850, 900)
         while True:
             try:
+                if check_base_url() is False:
+                    if settings.ADVANCED_ANTI_DETECTION:
+                        sys.exit(
+                            "Detected index js file change. Contact me to check if it's safe to continue: https://t.me/vanhbakaaa")
+                    else:
+                        sys.exit(
+                            "Detected api change! Stopped the bot for safety. Contact me here to update the bot: https://t.me/vanhbakaaa")
+
                 if time() - jwt_token_create_time >= jwt_live_time:
                     if self.logged:
-                        logger.info(f"{self.session_name} | Refreshing token...")
                         self.refresh_token(session)
                         jwt_token_create_time = time()
                         jwt_token_create_time = randint(850, 900)
                 if time() - access_token_created_time >= token_live_time:
                     tg_web_data = self.query
-                    if check_base_url() is False:
-                        sys.exit(
-                            "Detected api change! Stoped the bot for safety. Contact me here to update the bot: https://t.me/vanhbakaaa")
                     headers['Tl-Init-Data'] = tg_web_data
+                    http_client.headers['Tl-Init-Data'] = tg_web_data
                     self.auth_token = tg_web_data
                     self.login(session)
-
+                    http_client.headers['Authorization'] = headers['Authorization']
                     access_token_created_time = time()
                     token_live_time = randint(3500, 3600)
                 self.logged = True
                 if self.logged:
-                    try:
-                        # self.refresh_token(session)
-                        await self.get_me(session)
-                    except:
-                        while True:
-                            self.refresh_token(session)
-                            if await self.get_me(session):
-                                break
+                    await self.get_me(http_client)
 
-                    attempt_play = randint(settings.GAME_PLAY_EACH_ROUND[0], settings.GAME_PLAY_EACH_ROUND[1])
+                    attempt_play = settings.GAME_PLAY_EACH_ROUND
                     while attempt_play > 0:
                         attempt_play -= 1
                         wl = randint(1, 100)
-                        if wl > 90:
+                        if wl > 100:
                             try:
                                 # print(headers)
-                                res = session.post("https://api.bybitcoinsweeper.com/api/games/start", headers=headers, json={})
-
-                                if res.status_code == 401:
-                                    self.refresh_token(session)
-                                    continue
-                                # print(res.headers)
+                                res = session.post("https://api.bybitcoinsweeper.com/api/games/start", headers=headers)
+                                res.raise_for_status()
                                 game_data = res.json()
                                 game_id = game_data['id']
                                 bagcoins = game_data['rewards']['bagCoins']
@@ -247,21 +232,20 @@ class Tapper:
                                     'Sec-Fetch-Mode': 'cors',
                                     'Sec-Fetch-Site': 'same-site',
                                     'Sec-Ch-Ua': '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
+                                    'Sec-Ch-Ua-mobile': '?1',
+                                    'Sec-Ch-Ua-platform': '"Android"',
                                     'User-Agent': headers["User-Agent"],
                                 }
                                 res = session.options("https://api.bybitcoinsweeper.com/api/games/lose",
                                                       headers=head1)
-                                res = session.post("https://api.bybitcoinsweeper.com/api/games/lose", headers=headers ,json=payload)
-                                # print(res.headers)
+                                res = session.post("https://api.bybitcoinsweeper.com/api/games/lose", headers=headers,json=payload)
                                 if res.status_code == 201:
                                     logger.info(f"{self.session_name} | <red>Lose game: </red><cyan>{game_id}</cyan> <red>:(</red>")
                                     # await asyncio.sleep(random.uniform(0.5, 1.5))
-                                    await self.get_me(session)
-                                elif res.status_code == 401:
-                                    self.refresh_token(session)
-                                    continue
+                                    await self.get_me(http_client)
 
                             except Exception as e:
+                                print(res.text)
                                 logger.warning(f"{self.session_name} | Unknown error while trying to play game: {e}")
                         else:
                             try:
@@ -280,16 +264,17 @@ class Tapper:
                                     'Sec-Fetch-Mode': 'cors',
                                     'Sec-Fetch-Site': 'same-site',
                                     'Sec-Ch-Ua': '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
+                                    'Sec-Ch-Ua-mobile': '?1',
+                                    'Sec-Ch-Ua-platform': '"Android"',
                                     'User-Agent': headers["User-Agent"],
                                 }
-                                res1 = session.options("https://api.bybitcoinsweeper.com/api/games/start",
+                                res = await http_client.options("https://api.bybitcoinsweeper.com/api/games/start",
                                                       headers=head1)
-                                res = session.post("https://api.bybitcoinsweeper.com/api/games/start", headers=headers, json={})
-                                if res.status_code == 401:
-                                    self.refresh_token(session)
-                                    continue
-                                game_data = res.json()
-                                # print(res.headers)
+                                http_client.headers['Content-Type'] = "application/json"
+                                res = await http_client.post("https://api.bybitcoinsweeper.com/api/games/start", json={})
+                                # print(http_client.headers)
+                                res.raise_for_status()
+                                game_data = await res.json()
                                 # print(game_data)
                                 started_at = game_data['createdAt']
                                 game_id = game_data['id']
@@ -297,7 +282,7 @@ class Tapper:
                                 bits = game_data['rewards']['bits']
                                 gifts = game_data['rewards']['gifts']
                                 logger.info(f"Successfully started game: <light-blue>{game_id}</light-blue>")
-                                sleep_ = randint(settings.TIME_PLAY_EACH_GAME[0], settings.TIME_PLAY_EACH_GAME[1])
+                                sleep_ = randint(85, 151)
                                 logger.info(f"{self.session_name} | Wait <cyan>{sleep_}s</cyan> to complete game...")
                                 await asyncio.sleep(sleep_)
                                 unix_time_started = datetime.strptime(started_at, '%Y-%m-%dT%H:%M:%S.%fZ')
@@ -336,23 +321,23 @@ class Tapper:
                                     'Sec-Fetch-Mode': 'cors',
                                     'Sec-Fetch-Site': 'same-site',
                                     'Sec-Ch-Ua': '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
+                                    'Sec-Ch-Ua-mobile': '?1',
+                                    'Sec-Ch-Ua-platform': '"Android"',
                                     'User-Agent': headers["User-Agent"]
                                 }
-                                res = session.options("https://api.bybitcoinsweeper.com/api/games/win", headers=head1)
+                                res = await http_client.options("https://api.bybitcoinsweeper.com/api/games/win", headers=head1)
 
-                                res = session.post("https://api.bybitcoinsweeper.com/api/games/win",
-                                                   json=payload, headers=headers)
+                                res = await http_client.post("https://api.bybitcoinsweeper.com/api/games/win",
+                                                   json=payload)
 
                                 # print(res.text)
-                                # print(res.headers)
-                                if res.status_code == 201:
+                                if res.status == 201:
                                     logger.info(
                                         f"{self.session_name} | <green> Won game : </green><cyan>{game_id}</cyan> | Earned <yellow>{int(lr_pl)}</yellow>")
                                     # print(res.headers)
-                                    await self.get_me(session)
-                                elif res.status_code == 401:
-                                    self.refresh_token(session)
-                                    continue
+                                    await self.get_me(http_client)
+                                else:
+                                    print(res.text)
 
                             except Exception as e:
                                 print(res.text)
@@ -360,23 +345,17 @@ class Tapper:
                                 traceback.print_exc()
                                 await asyncio.sleep(20)
 
-                        await asyncio.sleep(randint(15, 25))
+                        await asyncio.sleep(randint(20, 25))
 
-                if self.multi_thread:
-
-                    sleep_ = randint(500, 1000)
-                    logger.info(f"{self.session_name} | Sleep {sleep_}s...")
-                    await asyncio.sleep(sleep_)
-                else:
-                    await http_client.close()
-                    session.close()
-                    break
+                sleep_ = randint(500, 1000)
+                logger.info(f"{self.session_name} | Sleep {sleep_}s...")
+                await asyncio.sleep(sleep_)
 
             except InvalidSession as error:
                 raise error
 
             except Exception as error:
-                traceback.print_exc()
+
                 logger.error(f"{self.session_name} | Unknown error: {error}")
                 await asyncio.sleep(delay=randint(60, 120))
 
@@ -386,27 +365,7 @@ async def run_query_tapper(query: str, name: str, proxy: str | None):
     try:
         sleep_ = randint(1, 15)
         logger.info(f" start after {sleep_}s")
-        await asyncio.sleep(sleep_)
-        await Tapper(query=query, session_name=name, multi_thread=True).run(proxy=proxy)
+        # await asyncio.sleep(sleep_)
+        await Tapper(query=query, session_name=name).run(proxy=proxy)
     except InvalidSession:
         logger.error(f"Invalid Query: {query}")
-
-async def run_query_tapper1(querys: list[str], proxies):
-    proxies_cycle = cycle(proxies) if proxies else None
-    name = "Account"
-
-    while True:
-        i = 0
-        for query in querys:
-            try:
-                await Tapper(query=query,session_name=f"{name} {i}",multi_thread=False).run(next(proxies_cycle) if proxies_cycle else None)
-            except InvalidSession:
-                logger.error(f"Invalid Query: {query}")
-
-            sleep_ = randint(settings.DELAY_EACH_ACCOUNT[0], settings.DELAY_EACH_ACCOUNT[1])
-            logger.info(f"Sleep {sleep_}s...")
-            await asyncio.sleep(sleep_)
-
-        sleep_ = randint(500, 700)
-        logger.info(f"<red>Sleep {sleep_}s...</red>")
-        await asyncio.sleep(sleep_)

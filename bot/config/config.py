@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     GAME_PLAY_EACH_ROUND: list[int] = [2, 4]
     TIME_PLAY_EACH_GAME: list[int] = [130, 180]
 
+    ADVANCED_ANTI_DETECTION: bool = True
+
     DELAY_EACH_ACCOUNT: list[int] = [20, 30]
 
     USE_PROXY_FROM_FILE: bool = False

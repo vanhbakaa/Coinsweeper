@@ -275,6 +275,14 @@ class Tapper:
         jwt_live_time = randint(850, 900)
         while True:
             try:
+                if check_base_url() is False:
+                    if settings.ADVANCED_ANTI_DETECTION:
+                        sys.exit(
+                            "Detected index js file change. Contact me to check if it's safe to continue: https://t.me/vanhbakaaa")
+                    else:
+                        sys.exit(
+                            "Detected api change! Stopped the bot for safety. Contact me here to update the bot: https://t.me/vanhbakaaa")
+
                 if time() - jwt_token_create_time >= jwt_live_time:
                     if self.logged:
                         logger.info(f"{self.session_name} | Refreshing token...")
@@ -282,9 +290,6 @@ class Tapper:
                         jwt_token_create_time = time()
                         jwt_token_create_time = randint(850, 900)
                 if time() - access_token_created_time >= token_live_time:
-                    if check_base_url() is False:
-                        sys.exit(
-                            "Detected api change! Stoped the bot for safety. Contact me here to update the bot: https://t.me/vanhbakaaa")
                     tg_web_data = await self.get_tg_web_data(proxy=proxy)
                     headers['Tl-Init-Data'] = tg_web_data
                     self.auth_token = tg_web_data
