@@ -31,6 +31,8 @@
 | **AUTO_PLAY**              | Auto play game (default: True)                                                                                  |
 | **GAME_PLAY_EACH_ROUND**              | Random number of game play in one round (default: [2, 4])                                                                                  |
 | **TIME_PLAY_EACH_GAME**              |Random time in second to play each game (default: [130, 180])                                                                                  |
+| **DELAY_EACH_ACCOUNT**              |Random time delay each account (default: [20, 30])                                                                                  |
+| **ADVANCED_ANTI_DETECTION**              |More protection for your account (default: True)                                                                                  |
 | **USE_PROXY_FROM_FILE**    | Whether to use a proxy from the bot/config/proxies.txt file (True / False)                                    |
 
 
