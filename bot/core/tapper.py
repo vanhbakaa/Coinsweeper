@@ -1,6 +1,5 @@
 import asyncio
 import random
-import sys
 import traceback
 from itertools import cycle
 from time import time
@@ -274,198 +273,199 @@ class Tapper:
         jwt_token_create_time = 0
         jwt_live_time = randint(850, 900)
         while True:
+            can_run = True
             try:
                 if check_base_url() is False:
+                    can_run = False
                     if settings.ADVANCED_ANTI_DETECTION:
-                        sys.exit(
-                            "Detected index js file change. Contact me to check if it's safe to continue: https://t.me/vanhbakaaa")
+                        logger.warning(
+                            "<yellow>Detected index js file change. Contact me to check if it's safe to continue: https://t.me/vanhbakaaa</yellow>")
                     else:
-                        sys.exit(
-                            "Detected api change! Stopped the bot for safety. Contact me here to update the bot: https://t.me/vanhbakaaa")
-
-                if time() - jwt_token_create_time >= jwt_live_time:
-                    if self.logged:
-                        logger.info(f"{self.session_name} | Refreshing token...")
-                        self.refresh_token(session)
-                        jwt_token_create_time = time()
-                        jwt_token_create_time = randint(850, 900)
-                if time() - access_token_created_time >= token_live_time:
-                    tg_web_data = await self.get_tg_web_data(proxy=proxy)
-                    headers['Tl-Init-Data'] = tg_web_data
-                    self.auth_token = tg_web_data
-                    self.login(session)
-                    access_token_created_time = time()
-                    token_live_time = randint(3500, 3600)
-                self.logged = True
-                if self.logged:
-                    try:
-                        # self.refresh_token(session)
-                        await self.get_me(session)
-                    except:
-                        while True:
+                        logger.warning(
+                            "<yellow>Detected api change! Stopped the bot for safety. Contact me here to update the bot: https://t.me/vanhbakaaa</yellow>")
+                if can_run:
+                    if time() - jwt_token_create_time >= jwt_live_time:
+                        if self.logged:
+                            logger.info(f"{self.session_name} | Refreshing token...")
                             self.refresh_token(session)
-                            if await self.get_me(session):
-                                break
+                            jwt_token_create_time = time()
+                            jwt_token_create_time = randint(850, 900)
+                    if time() - access_token_created_time >= token_live_time:
+                        tg_web_data = await self.get_tg_web_data(proxy=proxy)
+                        headers['Tl-Init-Data'] = tg_web_data
+                        self.auth_token = tg_web_data
+                        self.login(session)
+                        access_token_created_time = time()
+                        token_live_time = randint(3500, 3600)
+                    self.logged = True
+                    if self.logged:
+                        try:
+                            # self.refresh_token(session)
+                            await self.get_me(session)
+                        except:
+                            while True:
+                                self.refresh_token(session)
+                                if await self.get_me(session):
+                                    break
 
-                    attempt_play = randint(settings.GAME_PLAY_EACH_ROUND[0], settings.GAME_PLAY_EACH_ROUND[1])
-                    while attempt_play > 0:
-                        attempt_play -= 1
-                        wl = randint(1, 100)
-                        if wl > 90:
-                            try:
-                                # print(headers)
-                                res = session.post("https://api.bybitcoinsweeper.com/api/games/start", headers=headers, json={})
+                        attempt_play = randint(settings.GAME_PLAY_EACH_ROUND[0], settings.GAME_PLAY_EACH_ROUND[1])
+                        while attempt_play > 0:
+                            attempt_play -= 1
+                            wl = randint(1, 100)
+                            if wl > 90:
+                                try:
+                                    # print(headers)
+                                    res = session.post("https://api.bybitcoinsweeper.com/api/games/start", headers=headers, json={})
 
-                                if res.status_code == 401:
-                                    self.refresh_token(session)
-                                    continue
-                                # print(res.headers)
-                                game_data = res.json()
-                                game_id = game_data['id']
-                                bagcoins = game_data['rewards']['bagCoins']
-                                bits = game_data['rewards']['bits']
-                                gifts = game_data['rewards']['gifts']
-                                logger.info(f"Successfully started game: <light-blue>{game_id}</light-blue>")
-                                sleep_ = random.uniform(settings.TIME_PLAY_EACH_GAME[0], settings.TIME_PLAY_EACH_GAME[1])
-                                logger.info(f"{self.session_name} | Wait <cyan>{sleep_}s</cyan> to complete game...")
-                                await asyncio.sleep(sleep_)
-                                payload = {
-                                    "bagCoins": bagcoins,
-                                    "bits": bits,
-                                    "gameId": game_id,
-                                    "gifts": gifts
-                                }
-                                head1 = {
-                                    'Accept': '*/*',
-                                    'Accept-Language': 'en,en-US;q=0.9,vi;q=0.8',
-                                    "Accept-Encoding": "gzip, deflate, br",
-                                    'Connection': 'keep-alive',
-                                    'Host': "api.bybitcoinsweeper.com",
-                                    "Access-Control-Request-Headers": "authorization,content-type,tl-init-data",
-                                    "Access-Control-Request-Method": "POST",
-                                    'Origin': 'https://bybitcoinsweeper.com',
-                                    'Referer': 'https://bybitcoinsweeper.com/',
-                                    'Sec-Fetch-Dest': 'empty',
-                                    'Sec-Fetch-Mode': 'cors',
-                                    'Sec-Fetch-Site': 'same-site',
-                                    'Sec-Ch-Ua': '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
-                                    'User-Agent': headers["User-Agent"],
-                                }
-                                res = session.options("https://api.bybitcoinsweeper.com/api/games/lose",
-                                                      headers=head1)
-                                res = session.post("https://api.bybitcoinsweeper.com/api/games/lose", headers=headers ,json=payload)
-                                # print(res.headers)
-                                if res.status_code == 201:
-                                    logger.info(f"{self.session_name} | <red>Lose game: </red><cyan>{game_id}</cyan> <red>:(</red>")
-                                    # await asyncio.sleep(random.uniform(0.5, 1.5))
-                                    await self.get_me(session)
-                                elif res.status_code == 401:
-                                    self.refresh_token(session)
-                                    continue
-
-                            except Exception as e:
-                                logger.warning(f"{self.session_name} | Unknown error while trying to play game: {e}")
-                        else:
-                            try:
-                                # print(headers)
-                                head1 = {
-                                    'Accept': '*/*',
-                                    'Accept-Language': 'en,en-US;q=0.9,vi;q=0.8',
-                                    "Accept-Encoding": "gzip, deflate, br",
-                                    'Connection': 'keep-alive',
-                                    'Host': "api.bybitcoinsweeper.com",
-                                    "Access-Control-Request-Headers": "authorization,tl-init-data",
-                                    "Access-Control-Request-Method": "POST",
-                                    'Origin': 'https://bybitcoinsweeper.com',
-                                    'Referer': 'https://bybitcoinsweeper.com/',
-                                    'Sec-Fetch-Dest': 'empty',
-                                    'Sec-Fetch-Mode': 'cors',
-                                    'Sec-Fetch-Site': 'same-site',
-                                    'Sec-Ch-Ua': '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
-                                    'User-Agent': headers["User-Agent"],
-                                }
-                                res1 = session.options("https://api.bybitcoinsweeper.com/api/games/start",
-                                                      headers=head1)
-                                res = session.post("https://api.bybitcoinsweeper.com/api/games/start", headers=headers, json={})
-                                if res.status_code == 401:
-                                    self.refresh_token(session)
-                                    continue
-                                game_data = res.json()
-                                # print(res.headers)
-                                # print(game_data)
-                                started_at = game_data['createdAt']
-                                game_id = game_data['id']
-                                bagcoins = game_data['rewards']['bagCoins']
-                                bits = game_data['rewards']['bits']
-                                gifts = game_data['rewards']['gifts']
-                                logger.info(f"Successfully started game: <light-blue>{game_id}</light-blue>")
-                                sleep_ = randint(settings.TIME_PLAY_EACH_GAME[0], settings.TIME_PLAY_EACH_GAME[1])
-                                logger.info(f"{self.session_name} | Wait <cyan>{sleep_}s</cyan> to complete game...")
-                                await asyncio.sleep(sleep_)
-                                unix_time_started = datetime.strptime(started_at, '%Y-%m-%dT%H:%M:%S.%fZ')
-                                unix_time_started = unix_time_started.replace(tzinfo=pytz.UTC)
-                                unix_time_ms = int(unix_time_started.timestamp() * 1000)
-                                timeplay = sleep_
-                                self.user_id += "v$2f1"
-                                mr_pl = f"{game_id}-{unix_time_ms}"
-                                lr_pl = calc(i=45,s=timeplay,a=54,o=9,d=True,g=game_id)
-                                xr_pl = f"{self.user_id}-{mr_pl}"
-                                kr_pl = f"{timeplay}-{game_id}"
-                                _r = hmac.new(xr_pl.encode('utf-8'), kr_pl.encode('utf-8'), hashlib.sha256).hexdigest()
-                                # print(lr_pl)
-                                payload = {
-                                    "bagCoins": bagcoins,
-                                    "bits": bits,
-                                    "gameId": game_id,
-                                    "gameTime": timeplay,
-                                    "gifts": gifts,
-                                    "h": _r,
-                                    "score": lr_pl
-                                }
-                                # print(payload)
-                                # print(lr_pl)
-                                head1 = {
-                                    'Accept': '*/*',
-                                    'Accept-Language': 'en,en-US;q=0.9,vi;q=0.8',
-                                    "Accept-Encoding": "gzip, deflate, br",
-                                    'Connection': 'keep-alive',
-                                    'Host': "api.bybitcoinsweeper.com",
-                                    "Access-Control-Request-Headers": "authorization,content-type,tl-init-data",
-                                    "Access-Control-Request-Method": "POST",
-                                    'Origin': 'https://bybitcoinsweeper.com',
-                                    'Referer': 'https://bybitcoinsweeper.com/',
-                                    'Sec-Fetch-Dest': 'empty',
-                                    'Sec-Fetch-Mode': 'cors',
-                                    'Sec-Fetch-Site': 'same-site',
-                                    'Sec-Ch-Ua': '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
-                                    'User-Agent': headers["User-Agent"]
-                                }
-                                res = session.options("https://api.bybitcoinsweeper.com/api/games/win", headers=head1)
-
-                                res = session.post("https://api.bybitcoinsweeper.com/api/games/win",
-                                                   json=payload, headers=headers)
-
-                                # print(res.text)
-                                # print(res.headers)
-                                if res.status_code == 201:
-                                    logger.info(
-                                        f"{self.session_name} | <green> Won game : </green><cyan>{game_id}</cyan> | Earned <yellow>{int(lr_pl)}</yellow>")
+                                    if res.status_code == 401:
+                                        self.refresh_token(session)
+                                        continue
                                     # print(res.headers)
-                                    await self.get_me(session)
-                                elif res.status_code == 401:
-                                    self.refresh_token(session)
-                                    continue
+                                    game_data = res.json()
+                                    game_id = game_data['id']
+                                    bagcoins = game_data['rewards']['bagCoins']
+                                    bits = game_data['rewards']['bits']
+                                    gifts = game_data['rewards']['gifts']
+                                    logger.info(f"Successfully started game: <light-blue>{game_id}</light-blue>")
+                                    sleep_ = random.uniform(settings.TIME_PLAY_EACH_GAME[0], settings.TIME_PLAY_EACH_GAME[1])
+                                    logger.info(f"{self.session_name} | Wait <cyan>{sleep_}s</cyan> to complete game...")
+                                    await asyncio.sleep(sleep_)
+                                    payload = {
+                                        "bagCoins": bagcoins,
+                                        "bits": bits,
+                                        "gameId": game_id,
+                                        "gifts": gifts
+                                    }
+                                    head1 = {
+                                        'Accept': '*/*',
+                                        'Accept-Language': 'en,en-US;q=0.9,vi;q=0.8',
+                                        "Accept-Encoding": "gzip, deflate, br",
+                                        'Connection': 'keep-alive',
+                                        'Host': "api.bybitcoinsweeper.com",
+                                        "Access-Control-Request-Headers": "authorization,content-type,tl-init-data",
+                                        "Access-Control-Request-Method": "POST",
+                                        'Origin': 'https://bybitcoinsweeper.com',
+                                        'Referer': 'https://bybitcoinsweeper.com/',
+                                        'Sec-Fetch-Dest': 'empty',
+                                        'Sec-Fetch-Mode': 'cors',
+                                        'Sec-Fetch-Site': 'same-site',
+                                        'Sec-Ch-Ua': '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
+                                        'User-Agent': headers["User-Agent"],
+                                    }
+                                    res = session.options("https://api.bybitcoinsweeper.com/api/games/lose",
+                                                          headers=head1)
+                                    res = session.post("https://api.bybitcoinsweeper.com/api/games/lose", headers=headers ,json=payload)
+                                    # print(res.headers)
+                                    if res.status_code == 201:
+                                        logger.info(f"{self.session_name} | <red>Lose game: </red><cyan>{game_id}</cyan> <red>:(</red>")
+                                        # await asyncio.sleep(random.uniform(0.5, 1.5))
+                                        await self.get_me(session)
+                                    elif res.status_code == 401:
+                                        self.refresh_token(session)
+                                        continue
 
-                            except Exception as e:
-                                print(res.text)
-                                logger.warning(f"{self.session_name} | Unknown error while trying to play game: {e} - Sleep 20s")
-                                traceback.print_exc()
-                                await asyncio.sleep(20)
+                                except Exception as e:
+                                    logger.warning(f"{self.session_name} | Unknown error while trying to play game: {e}")
+                            else:
+                                try:
+                                    # print(headers)
+                                    head1 = {
+                                        'Accept': '*/*',
+                                        'Accept-Language': 'en,en-US;q=0.9,vi;q=0.8',
+                                        "Accept-Encoding": "gzip, deflate, br",
+                                        'Connection': 'keep-alive',
+                                        'Host': "api.bybitcoinsweeper.com",
+                                        "Access-Control-Request-Headers": "authorization,tl-init-data",
+                                        "Access-Control-Request-Method": "POST",
+                                        'Origin': 'https://bybitcoinsweeper.com',
+                                        'Referer': 'https://bybitcoinsweeper.com/',
+                                        'Sec-Fetch-Dest': 'empty',
+                                        'Sec-Fetch-Mode': 'cors',
+                                        'Sec-Fetch-Site': 'same-site',
+                                        'Sec-Ch-Ua': '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
+                                        'User-Agent': headers["User-Agent"],
+                                    }
+                                    res1 = session.options("https://api.bybitcoinsweeper.com/api/games/start",
+                                                          headers=head1)
+                                    res = session.post("https://api.bybitcoinsweeper.com/api/games/start", headers=headers, json={})
+                                    if res.status_code == 401:
+                                        self.refresh_token(session)
+                                        continue
+                                    game_data = res.json()
+                                    # print(res.headers)
+                                    # print(game_data)
+                                    started_at = game_data['createdAt']
+                                    game_id = game_data['id']
+                                    bagcoins = game_data['rewards']['bagCoins']
+                                    bits = game_data['rewards']['bits']
+                                    gifts = game_data['rewards']['gifts']
+                                    logger.info(f"Successfully started game: <light-blue>{game_id}</light-blue>")
+                                    sleep_ = randint(settings.TIME_PLAY_EACH_GAME[0], settings.TIME_PLAY_EACH_GAME[1])
+                                    logger.info(f"{self.session_name} | Wait <cyan>{sleep_}s</cyan> to complete game...")
+                                    await asyncio.sleep(sleep_)
+                                    unix_time_started = datetime.strptime(started_at, '%Y-%m-%dT%H:%M:%S.%fZ')
+                                    unix_time_started = unix_time_started.replace(tzinfo=pytz.UTC)
+                                    unix_time_ms = int(unix_time_started.timestamp() * 1000)
+                                    timeplay = sleep_
+                                    self.user_id += "v$2f1"
+                                    mr_pl = f"{game_id}-{unix_time_ms}"
+                                    lr_pl = calc(i=45,s=timeplay,a=54,o=9,d=True,g=game_id)
+                                    xr_pl = f"{self.user_id}-{mr_pl}"
+                                    kr_pl = f"{timeplay}-{game_id}"
+                                    _r = hmac.new(xr_pl.encode('utf-8'), kr_pl.encode('utf-8'), hashlib.sha256).hexdigest()
+                                    # print(lr_pl)
+                                    payload = {
+                                        "bagCoins": bagcoins,
+                                        "bits": bits,
+                                        "gameId": game_id,
+                                        "gameTime": timeplay,
+                                        "gifts": gifts,
+                                        "h": _r,
+                                        "score": lr_pl
+                                    }
+                                    # print(payload)
+                                    # print(lr_pl)
+                                    head1 = {
+                                        'Accept': '*/*',
+                                        'Accept-Language': 'en,en-US;q=0.9,vi;q=0.8',
+                                        "Accept-Encoding": "gzip, deflate, br",
+                                        'Connection': 'keep-alive',
+                                        'Host': "api.bybitcoinsweeper.com",
+                                        "Access-Control-Request-Headers": "authorization,content-type,tl-init-data",
+                                        "Access-Control-Request-Method": "POST",
+                                        'Origin': 'https://bybitcoinsweeper.com',
+                                        'Referer': 'https://bybitcoinsweeper.com/',
+                                        'Sec-Fetch-Dest': 'empty',
+                                        'Sec-Fetch-Mode': 'cors',
+                                        'Sec-Fetch-Site': 'same-site',
+                                        'Sec-Ch-Ua': '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
+                                        'User-Agent': headers["User-Agent"]
+                                    }
+                                    res = session.options("https://api.bybitcoinsweeper.com/api/games/win", headers=head1)
 
-                        await asyncio.sleep(randint(15, 25))
+                                    res = session.post("https://api.bybitcoinsweeper.com/api/games/win",
+                                                       json=payload, headers=headers)
+
+                                    # print(res.text)
+                                    # print(res.headers)
+                                    if res.status_code == 201:
+                                        logger.info(
+                                            f"{self.session_name} | <green> Won game : </green><cyan>{game_id}</cyan> | Earned <yellow>{int(lr_pl)}</yellow>")
+                                        # print(res.headers)
+                                        await self.get_me(session)
+                                    elif res.status_code == 401:
+                                        self.refresh_token(session)
+                                        continue
+
+                                except Exception as e:
+                                    print(res.text)
+                                    logger.warning(f"{self.session_name} | Unknown error while trying to play game: {e} - Sleep 20s")
+                                    traceback.print_exc()
+                                    await asyncio.sleep(20)
+
+                            await asyncio.sleep(randint(15, 25))
 
                 if self.multi_thread:
-
                     sleep_ = randint(500, 1000)
                     logger.info(f"{self.session_name} | Sleep {sleep_}s...")
                     await asyncio.sleep(sleep_)
